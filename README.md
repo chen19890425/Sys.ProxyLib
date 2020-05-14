@@ -3,6 +3,8 @@ http/https Socks5 Socks4 Socks4a Proxy
 
 ---
 
+```C#
+
 var urls = new[]
 {
 	"http://www.baidu.com/a",
@@ -38,3 +40,5 @@ using (var proxyClientHandler = new Sys.ProxyLib.Http.ProxyMessageHandler(opts =
 		var arr = await Task.WhenAll(urls.Select(async url => await client.GetStringAsync(url)));
 	}
 }
+
+```
