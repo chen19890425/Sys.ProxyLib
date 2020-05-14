@@ -52,8 +52,6 @@ namespace Sys.ProxyLib.Http
 
         public ProxyMessageHandler(Action<Options> action = null)
         {
-            var factory = new ProxyFactory();
-
             _options = new Options();
 
             action?.Invoke(_options);
@@ -72,6 +70,8 @@ namespace Sys.ProxyLib.Http
             {
                 throw new ArgumentOutOfRangeException(nameof(_options.ProxyPort), "port must be greater than zero and less than 65535");
             }
+
+            var factory = new ProxyFactory();
 
             _pool = new ProxyClientPool(
                 Math.Max(1, _options.PoolSizePerHost),
