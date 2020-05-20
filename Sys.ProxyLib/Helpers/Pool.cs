@@ -117,7 +117,7 @@ namespace Sys.ProxyLib.Helpers
 
     internal class AsyncLazy<T>
     {
-        private int _isCreated = 0;
+        private readonly object _lock = new object();
         private Func<CancellationToken, Task<T>> _factory = null;
 
         public AsyncLazy(Func<CancellationToken, Task<T>> factory)
@@ -131,12 +131,17 @@ namespace Sys.ProxyLib.Helpers
 
         internal void EnsureValue(CancellationToken cancellationToken, CancellationToken disposeCancellationToken)
         {
-            if (Interlocked.CompareExchange(ref _isCreated, 1, 0) == 0)
+            if (!IsCreated)
             {
-                var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, disposeCancellationToken);
-
-                Value = _factory.Invoke(cancelSource.Token);
-                IsCreated = true;
+                lock (_lock)
+                {
+                    if (!IsCreated)
+                    {
+                        var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, disposeCancellationToken);
+                        Value = _factory.Invoke(cancelSource.Token);
+                        IsCreated = true;
+                    }
+                }
             }
         }
     }
