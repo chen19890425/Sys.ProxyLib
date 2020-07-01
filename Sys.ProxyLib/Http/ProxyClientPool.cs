@@ -34,7 +34,7 @@ namespace Sys.ProxyLib.Http
         {
             Pool<ProxyClientWrapper> pool = null;
 
-            HostPort key = new HostPort() { Host = uri.Host, Port = uri.Port, IsSsl = uri.IsHttps() };
+            HostPort key = new HostPort(uri.Host, uri.Port, uri.IsHttps());
 
             if (!_cachedPools.TryGetValue(key, out pool))
             {
@@ -69,13 +69,51 @@ namespace Sys.ProxyLib.Http
         }
     }
 
-    internal struct HostPort
+    internal struct HostPort : IEquatable<HostPort>
     {
-        public string Host { get; set; }
+        private readonly int _code;
+        private readonly string _string;
 
-        public int Port { get; set; }
+        public HostPort(string host, int port, bool isSsl)
+        {
+            this.Host = host;
+            this.Port = port;
+            this.IsSsl = isSsl;
 
-        public bool IsSsl { get; set; }
+            this._string = $"{(this.IsSsl ? "https" : "http")}://{this.Host}:{this.Port}";
+            this._code = this._string.GetHashCode();
+        }
+
+        public string Host { get; }
+
+        public int Port { get; }
+
+        public bool IsSsl { get; }
+
+        public bool Equals(HostPort other)
+        {
+            return this.Host == other.Host && this.Port == other.Port && this.IsSsl == other.IsSsl;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj != null && obj is HostPort val)
+            {
+                return this.Equals(val);
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            return this._code;
+        }
+
+        public override string ToString()
+        {
+            return this._string;
+        }
     }
 
     internal class ProxyClientWrapper : IDisposable
