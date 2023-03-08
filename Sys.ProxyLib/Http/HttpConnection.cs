@@ -115,7 +115,9 @@ namespace Sys.ProxyLib.Http
 
                 if (cookiesCollection.Count > 0)
                 {
-                    var str_cookies = cookiesCollection.Cast<Cookie>().Select(cookie => string.Concat(cookie.Name, "=", cookie.Value));
+                    var str_cookies = cookiesCollection.Cast<Cookie>()
+                        .Where(cookie => !cookie.Expired)
+                        .Select(cookie => string.Concat(cookie.Name, "=", cookie.Value));
 
                     builder.Append("Cookie");
                     builder.Append(": ");
