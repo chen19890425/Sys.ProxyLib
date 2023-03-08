@@ -46,9 +46,9 @@ namespace Sys.ProxyLib.Proxy
 
         public NetworkStream GetStream() => Client.GetStream();
 
-        protected abstract Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default(CancellationToken));
+        protected abstract Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default);
 
-        public async Task ConnectionAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task ConnectionAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(destinationHost))
             {

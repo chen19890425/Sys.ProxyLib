@@ -32,25 +32,7 @@ namespace Sys.ProxyLib.Http
 
         public Task<PooledObject<ProxyClientWrapper>> GetClientAsync(Uri uri, TimeSpan? timeout = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Pool<ProxyClientWrapper> pool = null;
-
-            HostPort key = new HostPort(uri.Host, uri.Port, uri.IsHttps());
-
-            if (!_cachedPools.TryGetValue(key, out pool))
-            {
-                lock (_lock)
-                {
-                    if (!_cachedPools.TryGetValue(key, out pool))
-                    {
-                        pool = new Pool<ProxyClientWrapper>(
-                            _size,
-                            async cancel => new ProxyClientWrapper(await _proxyClientFactory.Invoke(cancel), key, _callback),
-                            whenDropAndNew: client => client.IsBroken);
-
-                        _cachedPools.Add(key, pool);
-                    }
-                }
-            }
+            var pool = GetPool(uri);
 
             return pool.GetObjectAsync(timeout, cancellationToken);
         }
@@ -66,6 +48,33 @@ namespace Sys.ProxyLib.Http
 
                 _cachedPools.Clear();
             }
+        }
+
+        private Pool<ProxyClientWrapper> GetPool(Uri uri)
+        {
+            HostPort key = new HostPort(uri.Host, uri.Port, uri.IsHttps());
+
+            if (_cachedPools.TryGetValue(key, out var pool))
+            {
+                return pool;
+            }
+
+            lock (_lock)
+            {
+                if (_cachedPools.TryGetValue(key, out pool))
+                {
+                    return pool;
+                }
+
+                pool = new Pool<ProxyClientWrapper>(
+                    _size,
+                    async cancel => new ProxyClientWrapper(await _proxyClientFactory.Invoke(cancel), key, _callback),
+                    whenDropAndNew: client => client.IsBroken);
+
+                _cachedPools.Add(key, pool);
+            }
+
+            return pool;
         }
     }
 

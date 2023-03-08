@@ -8,7 +8,7 @@ namespace Sys.ProxyLib.Helpers
 {
     internal static class CookieUtils
     {
-        internal static void Set_Cookie(this CookieContainer cookies, HttpRequestMessage request, string value)
+        internal static void SetCookie(this CookieContainer cookies, HttpRequestMessage request, string value)
         {
             if (value == null || value.Length == 0)
             {

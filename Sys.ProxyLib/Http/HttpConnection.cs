@@ -178,7 +178,7 @@ namespace Sys.ProxyLib.Http
                 string headerValue = rawHeader.Substring(colonOffset + 2);
                 if (cookies != null && string.Compare(headerName, "Set-Cookie", StringComparison.OrdinalIgnoreCase) == 0)
                 {
-                    cookies.Set_Cookie(request, headerValue);
+                    cookies.SetCookie(request, headerValue);
                 }
                 else if (!response.Headers.TryAddWithoutValidation(headerName, headerValue))
                 {

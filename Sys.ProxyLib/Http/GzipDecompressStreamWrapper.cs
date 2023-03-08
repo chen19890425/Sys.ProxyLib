@@ -18,16 +18,18 @@ namespace Sys.ProxyLib.Http
             byte[] buffer = new byte[64];
             int length = base.Read(array, offset, count);
 
-            if (length == 0)
+            if (length != 0)
             {
-                while (true)
-                {
-                    var len = BaseStream.Read(buffer, 0, buffer.Length);
+                return length;
+            }
 
-                    if (len == 0)
-                    {
-                        break;
-                    }
+            while (true)
+            {
+                var len = BaseStream.Read(buffer, 0, buffer.Length);
+
+                if (len == 0)
+                {
+                    break;
                 }
             }
 
@@ -39,16 +41,18 @@ namespace Sys.ProxyLib.Http
             byte[] array = new byte[64];
             int length = await base.ReadAsync(buffer, offset, count, cancellationToken);
 
-            if (length == 0)
+            if (length != 0)
             {
-                while (true)
-                {
-                    var len = await BaseStream.ReadAsync(array, 0, array.Length);
+                return length;
+            }
 
-                    if (len == 0)
-                    {
-                        break;
-                    }
+            while (true)
+            {
+                var len = await BaseStream.ReadAsync(array, 0, array.Length);
+
+                if (len == 0)
+                {
+                    break;
                 }
             }
 

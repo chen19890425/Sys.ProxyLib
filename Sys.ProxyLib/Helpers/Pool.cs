@@ -37,15 +37,17 @@ namespace Sys.ProxyLib.Helpers
 
             while (_pool.TryPop(out var item))
             {
-                if (item.IsCreated)
+                if (!item.IsCreated)
                 {
-                    if (item.Value.IsCompleted)
-                    {
-                        (item.Value.Result as IDisposable)?.Dispose();
-                    }
-
-                    item.Value.Dispose();
+                    continue;
                 }
+
+                if (item.Value.IsCompleted)
+                {
+                    (item.Value.Result as IDisposable)?.Dispose();
+                }
+
+                item.Value.Dispose();
             }
         }
 
@@ -131,17 +133,21 @@ namespace Sys.ProxyLib.Helpers
 
         internal void EnsureValue(CancellationToken cancellationToken, CancellationToken disposeCancellationToken)
         {
-            if (!IsCreated)
+            if (IsCreated)
             {
-                lock (_lock)
+                return;
+            }
+
+            lock (_lock)
+            {
+                if (IsCreated)
                 {
-                    if (!IsCreated)
-                    {
-                        var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, disposeCancellationToken);
-                        Value = _factory.Invoke(cancelSource.Token);
-                        IsCreated = true;
-                    }
+                    return;
                 }
+
+                var cancelSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, disposeCancellationToken);
+                Value = _factory.Invoke(cancelSource.Token);
+                IsCreated = true;
             }
         }
     }

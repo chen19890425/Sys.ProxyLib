@@ -34,9 +34,9 @@ namespace Sys.ProxyLib.Proxy
 
         public string ProxyUserId { get; }
 
-        protected override async Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default(CancellationToken))
+        protected override Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default)
         {
-            await SendCommandAsync(Client.GetStream(), SOCKS4_CMD_CONNECT, destinationHost, destinationPort, ProxyUserId, cancellationToken);
+            return SendCommandAsync(Client.GetStream(), SOCKS4_CMD_CONNECT, destinationHost, destinationPort, ProxyUserId, cancellationToken);
         }
 
         internal virtual async Task SendCommandAsync(NetworkStream proxy, byte command, string destinationHost, int destinationPort, string userId, CancellationToken cancellationToken)

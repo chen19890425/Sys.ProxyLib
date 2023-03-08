@@ -61,7 +61,7 @@ namespace Sys.ProxyLib.Proxy
 
         public string ProxyPassword { get; }
 
-        protected override async Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default(CancellationToken))
+        protected override async Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default)
         {
             await NegotiateServerAuthMethodAsync(cancellationToken);
 

@@ -76,9 +76,9 @@ namespace Sys.ProxyLib.Proxy
 
         public override string ProxyName => PROXY_NAME;
 
-        protected override async Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default(CancellationToken))
+        protected override Task SendProxyCommandAsync(string destinationHost, int destinationPort, CancellationToken cancellationToken = default)
         {
-            await SendConnectionCommandAsync(destinationHost, destinationPort, cancellationToken);
+            return SendConnectionCommandAsync(destinationHost, destinationPort, cancellationToken);
         }
 
         private async Task SendConnectionCommandAsync(string host, int port, CancellationToken cancellationToken)

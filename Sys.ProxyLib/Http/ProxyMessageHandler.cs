@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -75,10 +76,8 @@ namespace Sys.ProxyLib.Http
 
             _pool = new ProxyClientPool(
                 Math.Max(1, _options.PoolSizePerHost),
-                async cancel =>
+                cancel =>
                 {
-                    await Task.CompletedTask;
-
                     var proxyClient = factory.CreateProxy(
                         _options.ProxyType, _options.ProxyHost, _options.ProxyPort, _options.ProxyUsername,
                         _options.ProxyPassword);
@@ -93,14 +92,28 @@ namespace Sys.ProxyLib.Http
                         proxyClient.ReceiveTimeout = (int)_options.ProxyReceiveTimeout.Value.TotalMilliseconds;
                     }
 
-                    return proxyClient;
+                    return Task.FromResult(proxyClient);
                 },
                 _options.ServerCertificateCustomValidationCallback);
         }
 
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            return await SendAsync(request, cancellationToken, 0).ConfigureAwait(false);
+            return SendAsync(request, cancellationToken, 0);
+        }
+
+        private async Task StreamDrainAsync(Stream stream, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            byte[] buffer = new byte[4096];
+
+            for (int num = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false);
+                num > 0;
+                num = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken).ConfigureAwait(false))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
         }
 
         private async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken, int redictIndex)
@@ -114,7 +127,7 @@ namespace Sys.ProxyLib.Http
             try
             {
                 var cookies = _options.UseCookies ? _options.CookieContainer : null;
-                var stream = await pooledClient.Value.GetStreamAsync(cancellationToken);
+                var stream = await pooledClient.Value.GetStreamAsync(cancellationToken).ConfigureAwait(false);
                 var httpConnection = new HttpConnection(new BufferedReadStream(stream, leaveOpen: true)) { PooledClient = pooledClient };
                 var responseMessage = await httpConnection.SendAsync(request, cookies, cancellationToken).ConfigureAwait(false);
 
@@ -125,7 +138,9 @@ namespace Sys.ProxyLib.Http
                     responseMessage.StatusCode == HttpStatusCode.RedirectMethod ||
                     responseMessage.StatusCode == HttpStatusCode.RedirectKeepVerb))
                 {
-                    await responseMessage.Content.LoadIntoBufferAsync();
+                    var tmpStream = await responseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false);
+
+                    await StreamDrainAsync(tmpStream, cancellationToken).ConfigureAwait(false);
 
                     var location = responseMessage.Headers.Location;
 
