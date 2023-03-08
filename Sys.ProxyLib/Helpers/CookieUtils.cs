@@ -38,7 +38,7 @@ namespace Sys.ProxyLib.Helpers
             }
             else
             {
-                var isHtps = request.RequestUri.IsHttps();
+                var isHttps = request.RequestUri.IsHttps();
 
                 var cookie = new Cookie()
                 {
@@ -48,8 +48,8 @@ namespace Sys.ProxyLib.Helpers
                     Path = dict.TryGet("Path") ?? "/",
                     Port = dict.TryGet("Port"),
                     Discard = dict.ContainsKey("Discard"),
-                    Secure = isHtps ? true : dict.ContainsKey("Secure"),
-                    HttpOnly = isHtps ? false : dict.ContainsKey("HttpOnly")
+                    Secure = isHttps ? true : dict.ContainsKey("Secure"),
+                    HttpOnly = isHttps ? false : dict.ContainsKey("HttpOnly")
                 };
 
                 if (expires != null)
